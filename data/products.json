@@ -1,0 +1,179 @@
+[
+  {
+    "id": "1",
+    "name": "Smartphone XYZ",
+    "description": "Smartphone de última generación con cámara de alta resolución",
+    "price": 599,
+    "image": "assets/images/products/smartphone.jpg",
+    "stock": 50,
+    "categoryId": "1",
+    "status": 1,
+    "tags": [
+      "2",
+      "3"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-10T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:26.468Z"
+  },
+  {
+    "id": "2",
+    "name": "Laptop Pro",
+    "description": "Laptop potente para profesionales y gamers",
+    "price": 1299,
+    "image": "assets/images/products/laptop.jpg",
+    "stock": 20,
+    "categoryId": "1",
+    "status": 1,
+    "tags": [
+      "2"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-11T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:23.808Z"
+  },
+  {
+    "id": "3",
+    "name": "Camiseta Casual",
+    "description": "Camiseta de algodón de alta calidad",
+    "price": 29,
+    "image": "assets/images/products/camiseta.jpg",
+    "stock": 100,
+    "categoryId": "1756340396266",
+    "status": 1,
+    "tags": [
+      "1",
+      "3"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-12T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:20.705Z"
+  },
+  {
+    "id": "4",
+    "name": "Pantalón Vaquero",
+    "description": "Pantalón vaquero resistente y cómodo",
+    "price": 49,
+    "image": "assets/images/products/pantalon.jpg",
+    "stock": 75,
+    "categoryId": "1756340396266",
+    "status": 1,
+    "tags": [
+      "3",
+      "4"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-13T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:18.136Z"
+  },
+  {
+    "id": "5",
+    "name": "Lámpara LED",
+    "description": "Lámpara LED de bajo consumo para el hogar",
+    "price": 39,
+    "image": "assets/images/products/lampara.jpg",
+    "stock": 30,
+    "categoryId": "3",
+    "status": 1,
+    "tags": [
+      "1",
+      "2"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-14T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:15.551Z"
+  },
+  {
+    "id": "6",
+    "name": "Juego de Sábanas",
+    "description": "Juego de sábanas de algodón egipcio",
+    "price": 89.9,
+    "image": "assets/images/products/sabanas.jpg",
+    "stock": 25,
+    "categoryId": "3",
+    "status": 1,
+    "tags": [
+      "4"
+    ],
+    "offerPrice": 0,
+    "createdAt": "2023-01-15T00:00:00.000Z",
+    "updatedAt": "2025-09-05T15:01:13.868Z"
+  },
+  {
+    "name": "Pc gamer",
+    "description": "Una PC gamer es una computadora de alto rendimiento, diseñada para ejecutar videojuegos exigentes con gráficos avanzados y alta fluidez, pero también es útil para otras tareas pesadas como renderizado o diseño",
+    "price": 6000,
+    "image": "https://maxtecno.com.ar/wp-content/uploads/Sin-titulo-334.png",
+    "stock": 10,
+    "categoryId": "1",
+    "status": 1,
+    "tags": [
+      "2",
+      "1",
+      "4",
+      "3",
+      "1756148831300"
+    ],
+    "offerPrice": 5800,
+    "id": "1756151494303",
+    "createdAt": "2025-08-25T19:51:34.303Z",
+    "updatedAt": "2025-09-05T15:01:11.493Z",
+    "hasOffer": true
+  },
+  {
+    "name": "Comida rico",
+    "description": "es simplemente el texto de relleno de las imprentas y archivos de texto. Lorem Ipsum ha sido el texto de relleno estándar de las industrias desde el año 1500, cuando un impresor (N. del T. persona que se dedica ",
+    "price": 10,
+    "image": "https://res.cloudinary.com/dpyrrgou3/image/upload/v1737159372/e59d5848056107_nnh6ek.jpg",
+    "stock": 0,
+    "categoryId": "1756166961607",
+    "status": 1,
+    "tags": [
+      "3"
+    ],
+    "offerPrice": 0,
+    "id": "1756167024891",
+    "createdAt": "2025-08-26T00:10:24.891Z",
+    "updatedAt": "2025-09-05T15:00:41.563Z",
+    "isAvailable": true,
+    "hasOffer": false
+  },
+  {
+    "name": "Ciberseguridad de información",
+    "description": "Ciberseguridad de información detalles",
+    "price": 100,
+    "image": "https://mcusercontent.com/7c7389f78fa075b10d8a4618a/images/1835784d-ef81-4e2b-ca12-0f3be1fa9258.jpg",
+    "stock": 20,
+    "categoryId": "1",
+    "status": 1,
+    "tags": [
+      "2",
+      "3",
+      "1756401555752"
+    ],
+    "offerPrice": 0,
+    "id": "1756182071835",
+    "createdAt": "2025-08-26T04:21:11.835Z",
+    "updatedAt": "2025-09-05T15:00:29.102Z"
+  },
+  {
+    "name": "Sistema gestor de tareas",
+    "description": "Es un sistema para gestionar las Tareas, con 3 estados para organizar",
+    "price": 300,
+    "image": "https://res.cloudinary.com/dpyrrgou3/image/upload/v1751913315/9d89028d576b87_w0qy9d.jpg",
+    "stock": 0,
+    "categoryId": "1756390404783",
+    "status": 0,
+    "tags": [
+      "2",
+      "3",
+      "1"
+    ],
+    "offerPrice": 250,
+    "id": "1756415919564",
+    "createdAt": "2025-08-28T21:18:39.564Z",
+    "updatedAt": "2025-09-06T00:15:27.626Z",
+    "hasOffer": true,
+    "isAvailable": true
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "name": "Electrónicos",
+    "description": "Productos electrónicos y gadgets",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "updatedAt": "2025-08-29T22:06:53.911Z"
+  },
+  {
+    "id": "3",
+    "name": "Hogar",
+    "description": "Artículos para el hogar",
+    "createdAt": "2023-01-03T00:00:00.000Z",
+    "updatedAt": "2023-01-03T00:00:00.000Z"
+  },
+  {
+    "name": "Comida",
+    "description": "Comida de todo tipo",
+    "id": "1756166961607",
+    "createdAt": "2025-08-26T00:09:21.607Z",
+    "updatedAt": "2025-08-27T21:24:04.656Z"
+  },
+  {
+    "name": "Teclados",
+    "description": "Teclados para computadoras",
+    "id": "1756324470200",
+    "createdAt": "2025-08-27T19:54:30.200Z",
+    "updatedAt": "2025-08-27T23:58:49.214Z"
+  },
+  {
+    "name": "Ropas",
+    "description": "Ropas para toda las personas en general",
+    "id": "1756340396266",
+    "createdAt": "2025-08-28T00:19:56.266Z",
+    "updatedAt": "2025-08-28T00:19:56.266Z"
+  },
+  {
+    "name": "Tecnología",
+    "description": "Todo relacionado con la tecnología",
+    "id": "1756390404783",
+    "createdAt": "2025-08-28T14:13:24.783Z",
+    "updatedAt": "2025-09-05T19:18:47.174Z"
+  }
+]
