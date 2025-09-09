@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
     
     const newTag = await createFile({
-      id_folder: body.id_folder,
+      name_folder: body.name_folder,
       name: body.name,
       extension: body.extension,
       type: body.type,
