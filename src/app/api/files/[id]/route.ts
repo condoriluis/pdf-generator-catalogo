@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFileById, updateFile, deleteFile, updateTag } from '@/lib/utils/dataJson';
+import { getFileById, updateFileName, deleteFile } from '@/lib/utils/dataJson';
 
 // GET /api/files/[id] - Obtener un file por ID
 export async function GET(
@@ -27,7 +27,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const updatedFile = await updateFile(params.id, body);
+    const updatedFile = await updateFileName(params.id, body);
     
     if (!updatedFile) {
       return NextResponse.json({ error: 'File no encontrado' }, { status: 404 });
