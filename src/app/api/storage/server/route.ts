@@ -9,6 +9,14 @@ export const config = {
   },
 };
 
+function sanitizeFileName(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9.\-_]/g, '');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -27,10 +35,11 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const filePath = path.join(uploadDir, file.name);
+    const safeFileName = sanitizeFileName(file.name);
+    const filePath = path.join(uploadDir, safeFileName);
     fs.writeFileSync(filePath, buffer);
 
-    const url = `${SITE_URL}/assets/images/${file.name}`;
+    const url = `${SITE_URL}/assets/images/${safeFileName}`;
     return NextResponse.json({ url });
   } catch (err) {
     console.error(err);
