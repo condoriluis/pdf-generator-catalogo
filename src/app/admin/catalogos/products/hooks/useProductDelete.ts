@@ -23,7 +23,7 @@ export function useProductDelete(
       if (!res.ok) throw new Error(data.error || 'Error desconocido');
       toast.success(data.message || 'Producto eliminado correctamente');
 
-      setProducts(prev => prev.filter(p => p.id !== deleteId));
+      setProducts(prev => prev.filter(p => p.id_product.toString() !== deleteId));
       
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';

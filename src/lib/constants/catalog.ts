@@ -1,56 +1,54 @@
 export type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image?: string;
-  stock: number;
-  isAvailable: boolean;
-  categoryId: string;
-  status: number;
-  tags: string[];
-  offerPrice: number;
-  hasOffer?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  id_product: number;
+  name_product: string;
+  description_product: string;
+  price_product: number;
+  image_product?: string;
+  stock_product: number;
+  isAvailable_product: boolean;
+  id_category_product: number;
+  status_product: number;
+  id_tag_product: string[];
+  hasOffer_product: boolean;
+  offerPrice_product: number;
+  date_created_product: Date;
+  date_updated_product: Date;
 };
 
 export type Category = {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
+  id_category: number;
+  name_category: string;
+  description_category: string;
+  date_created_category: Date;
+  date_updated_category: Date;
 };
 
 export type Tag = {
-  id: string;
-  name: string;
-  color?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  id_tag: number;
+  name_tag: string;
+  color_tag?: string;
+  date_created_tag: Date;
+  date_updated_tag: Date;
 };
 
-export type File = {
-  id: string;
-  name_folder: string;
-  name: string;
-  extension: string;
-  type: string;
-  size: number;
-  url: string;
+export type UploadFile = {
+  id_file: number;
+  id_temp?: string;
+  name_file: string;
+  name_folder_file: string;
+  extension_file: string;
+  type_file: string;
+  size_file: number;
+  url_file: string;
   id_mailchimp?: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  date_created_file?: Date;
+  date_updated_file: Date;
 
-export type User = {
-  id: string;
-  name?: string;
-  email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
+  size_file_display?: string;
+  __originalName?: string;
+  preview?: string;
+  selected?: boolean;
+  __originalFile?: File;
 };
 
 export interface Watermark {
@@ -65,86 +63,14 @@ export interface Watermark {
 export type OrientationType = 'portrait' | 'landscape';
 
 export interface Setting {
-  id: string;
-  logo_url: string;
-  title: string;
-  description: string;
-  category_bg: string;
-  orientation: OrientationType;
-  template: 'grid' | 'list';
-  watermark: Watermark;
-  createdAt: Date;
-  updatedAt: Date;
+  id_setting: number;
+  logo_url_setting: string;
+  title_setting: string;
+  description_setting: string;
+  category_bg_setting: string;
+  orientation_setting: string;
+  template_setting: string;
+  watermark_setting: Watermark;
+  date_created_setting: Date;
+  date_updated_setting: Date;
 };
-
-// Importar datos desde archivos JSON
-import productsData from '@/../../data/products.json';
-import categoriesData from '@/../../data/categories.json';
-import tagsData from '@/../../data/tags.json';
-import filesData from '@/../../data/files.json';
-import usersData from '@/../../data/users.json';
-import settingsData from '@/../../data/settings.json';
-
-// Convertir fechas de string a Date
-const parseDate = (dateStr: string) => new Date(dateStr);
-
-// Procesar datos para asegurar que las fechas son objetos Date
-const processProducts = () => {
-  return productsData.map(product => ({
-    ...product,
-    createdAt: parseDate(product.createdAt as unknown as string),
-    updatedAt: parseDate(product.updatedAt as unknown as string)
-  }));
-};
-
-const processCategories = () => {
-  return categoriesData.map(category => ({
-    ...category,
-    createdAt: parseDate(category.createdAt as unknown as string),
-    updatedAt: parseDate(category.updatedAt as unknown as string)
-  }));
-};
-
-const processTags = () => {
-  return tagsData.map(tag => ({
-    ...tag,
-    createdAt: parseDate(tag.createdAt as unknown as string),
-    updatedAt: parseDate(tag.updatedAt as unknown as string)
-  }));
-};
-
-const processFiles = () => {
-  return filesData.map(file => ({
-    ...file,
-    createdAt: parseDate(file.createdAt as unknown as string),
-    updatedAt: parseDate(file.updatedAt as unknown as string)
-  }));
-};
-
-const processUsers = () => {
-  return usersData.map(user => ({
-    ...user,
-    createdAt: parseDate(user.createdAt as unknown as string),
-    updatedAt: parseDate(user.updatedAt as unknown as string)
-  }));
-};
-
-const processSettings = () => {
-  return settingsData.map(setting => ({
-    ...setting,
-    createdAt: parseDate(setting.createdAt as unknown as string),
-    updatedAt: parseDate(setting.updatedAt as unknown as string)
-  }));
-};
-
-// Datos del catálogo
-export const catalog = {
-  products: processProducts(),
-  categories: processCategories(),
-  tags: processTags(),
-  files: processFiles(),
-  users: processUsers(),
-  settings: processSettings()
-};
-
-export type Catalog = typeof catalog;

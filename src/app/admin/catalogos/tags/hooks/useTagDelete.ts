@@ -7,9 +7,9 @@ export function useTagDelete(
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>
 ) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const confirmDelete = (id: string) => {
+  const confirmDelete = (id: number) => {
     setDeleteId(id);
     setDeleteDialogOpen(true);
   };
@@ -22,7 +22,7 @@ export function useTagDelete(
       if (!res.ok) throw new Error(data.error || 'Error desconocido');
       toast.success(data.message || 'Etiqueta eliminada correctamente');
       
-      setTags(prev => prev.filter(c => c.id !== deleteId));
+      setTags(prev => prev.filter(c => c.id_tag !== deleteId));
       
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';

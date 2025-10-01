@@ -1,4 +1,4 @@
-import {  siYoutube } from 'simple-icons';
+import { siYoutube } from 'simple-icons';
 import { ExternalLink, SimpleIcon, siLinkedin, siGithub, siPortafolio } from '../common';
 
 const getIcon = (social: string) => {

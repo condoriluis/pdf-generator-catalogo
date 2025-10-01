@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { styles } from './styles/pdfStyles';
 import { Watermark } from './watermark';
-import type { Product, Category, OrientationType, Watermark as WatermarkType } from '@/lib/constants';
+import type { Product, Category, Tag, Watermark as WatermarkType } from '@/lib/constants';
 import { getImageUrl } from './utils/getImageUrl';
 import { registerPdfFonts } from './utils/fonts';
 
@@ -10,30 +10,30 @@ registerPdfFonts();
 
 type ProductItemProps = {
   product: Product;
-  tags: { id: string; name: string; color?: string }[];
+  tags: Tag[];
   isPdf: boolean;
 };
 
 const ProductItem: React.FC<ProductItemProps> = ({ product, tags, isPdf }) => {
 
-  if (product.status !== 1) return null;
+  if (product.status_product !== 1) return null;
 
-  const formattedPrice = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.price));
-  const formattedOffer = product.offerPrice && Number(product.offerPrice) > 0
-    ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.offerPrice))
+  const formattedPrice = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.price_product));
+  const formattedOffer = product.offerPrice_product && Number(product.offerPrice_product) > 0
+    ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.offerPrice_product))
     : null;
 
   return (
-    <View key={product.id} wrap={false} style={styles.productCard} >
+    <View key={product.id_product} wrap={false} style={styles.productCard} >
       <View style={styles.productHeader}>
-        {product.image && (
+        {product.image_product && (
           <Image
-            src={getImageUrl(product.image, isPdf)}
+            src={getImageUrl(product.image_product, isPdf)}
             style={styles.productImage}
           />
         )}
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{product.name}</Text>
+          <Text style={styles.productName}>{product.name_product}</Text>
           {formattedOffer ? (
             <Text style={styles.productPrice}>
               <Text style={{ fontSize: 8, fontStyle: 'italic', textDecoration: 'line-through', color: '#64748b' }}>
@@ -47,31 +47,56 @@ const ProductItem: React.FC<ProductItemProps> = ({ product, tags, isPdf }) => {
             <Text style={styles.productPrice}>{formattedPrice}</Text>
           )}
 
-          {product.isAvailable ? (
-            <Text style={styles.productStock}>Stock: Disponible</Text>
+          {product.isAvailable_product ? (
+            <Text style={styles.productStock}>
+              Stock:{' '}
+              <Text style={{ fontSize: 9, color: '#16a34a' }}>
+                Disponible
+              </Text>
+            </Text>
           ) : (
-            <Text style={styles.productStock}>Stock: {product.stock} unidades</Text>
+            <Text style={styles.productStock}>Stock: {product.stock_product} unidades</Text>
           )}
 
         </View>
       </View>
       <Text style={styles.productDescription}>
-        {product.description.length > 100
-          ? product.description.slice(0, 100) + '...'
-          : product.description}
+        {product.description_product.length > 100
+          ? product.description_product.slice(0, 100) + '...'
+          : product.description_product}
       </Text> 
       
       {/* Mostrar tags si existen */}
-      {product.tags && product.tags.length > 0 && (
+      {product.id_tag_product && (
         <View style={styles.tagsContainer}>
-          {product.tags.map(tagId => {
-            const tag = tags.find(t => t.id === tagId);
-            return tag ? (
-              <Text key={tagId} style={[styles.tag, { backgroundColor: tag.color }]}>{tag.name}</Text>
-            ) : null;
-          })}
+          {(() => {
+            let tagIds: string[] = [];
+
+            if (typeof product.id_tag_product === 'string') {
+              try {
+                tagIds = JSON.parse(product.id_tag_product);
+              } catch (e) {
+                tagIds = [];
+              }
+            } else if (Array.isArray(product.id_tag_product)) {
+              tagIds = product.id_tag_product;
+            }
+
+            return tagIds
+              .map(tagId => tags.find(t => t.id_tag.toString() === tagId))
+              .filter(Boolean)
+              .map(tag => (
+                <Text
+                  key={tag!.id_tag}
+                  style={[styles.tag, { backgroundColor: tag!.color_tag || '#e0f2f1' }]}
+                >
+                  {tag!.name_tag}
+                </Text>
+              ));
+          })()}
         </View>
       )}
+
     </View>
   );
 };
@@ -80,14 +105,14 @@ type ServerCatalogDocumentGridProps = {
   catalog: {
     categories: Category[];
     products: Product[];
-    tags: { id: string; name: string }[];
+    tags: Tag[];
   };
   title: string;
   subtitle: string;
   description: string;
   logo_url: string;
   category_bg: string;
-  orientation: OrientationType;
+  orientation: string;
   template: string;
   watermark?: WatermarkType;
   isPdf?: boolean;
@@ -107,13 +132,13 @@ export const ServerCatalogDocumentGrid: React.FC<ServerCatalogDocumentGridProps>
 }) => {
 
   const activeProducts = catalog.products
-  .filter(product => product.status === 1)
-  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  .filter(product => product.status_product === 1)
+  .sort((a, b) => new Date(b.date_created_product).getTime() - new Date(a.date_created_product).getTime());
 
   const productsByCategory = catalog.categories
     .map((category) => ({
       category,
-      products: activeProducts.filter((product) => product.categoryId === category.id),
+      products: activeProducts.filter((product) => product.id_category_product === category.id_category),
     }))
     .filter(({ products }) => products.length > 0);
 
@@ -122,23 +147,23 @@ export const ServerCatalogDocumentGrid: React.FC<ServerCatalogDocumentGridProps>
       author='Luis CZ'
       title={`${title}, ${new Date().getFullYear()}`}
     >
-      <Page size="A4" orientation={orientation} style={styles.page}>
+      <Page size="A4" orientation={orientation as 'portrait' | 'landscape'} style={styles.page}>
 
         <Watermark watermark={watermark} />
 
         {/* Encabezado */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 0 }}>
 
           {logo_url && (
             <Image
               src={getImageUrl(logo_url, isPdf)}
-              style={{ width: 80, height: 50, objectFit: 'contain', marginRight: 0 }}
+              style={{ maxWidth: 140, maxHeight: 70, objectFit: 'contain', marginRight: 0 }}
             />
           )}
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: 'bold',
                 color: '#1e293b',
                 textAlign: 'center',
@@ -149,7 +174,7 @@ export const ServerCatalogDocumentGrid: React.FC<ServerCatalogDocumentGridProps>
             </Text>
             <Text
               style={{
-                fontSize: 12,
+                fontSize: 10,
                 color: '#475569',
                 marginTop: 2,
                 textAlign: 'center',
@@ -163,13 +188,13 @@ export const ServerCatalogDocumentGrid: React.FC<ServerCatalogDocumentGridProps>
 
         {/* Secciones por categoría */}
         {productsByCategory.map(({ category, products }) => (
-          <View key={category.id} wrap={false} style={styles.section}>
+          <View key={category.id_category} wrap={false} style={styles.section}>
             <Text style={{ ...styles.sectionTitle, backgroundColor: category_bg }}>
-              {category.name}
+              {category.name_category}
             </Text>
             <View style={styles.productsContainer}>
               {products.map((product) => (
-                <ProductItem key={product.id} product={product} tags={catalog.tags} isPdf={isPdf} />
+                <ProductItem key={product.id_product} product={product} tags={catalog.tags} isPdf={isPdf} />
               ))}
             </View>
           </View>

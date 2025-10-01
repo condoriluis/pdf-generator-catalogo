@@ -14,9 +14,15 @@ export function useProducts() {
       if (!res.ok) throw new Error('Error al cargar productos');
       const data = await res.json();
 
-      const sortedData = data.sort(
+      const mappedData: Product[] = data.map((p: any) => ({
+        ...p,
+        isAvailable_product: Boolean(p.isAvailable_product),
+        hasOffer_product: Boolean(p.hasOffer_product),
+      }));
+
+      const sortedData = mappedData.sort(
         (a: Product, b: Product) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.date_created_product).getTime() - new Date(a.date_created_product).getTime()
       );
       setProducts(sortedData);
     } catch (err) {

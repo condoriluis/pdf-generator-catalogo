@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Product } from '@/lib/constants';
 import { toast } from 'sonner';
+import { Product } from '@/lib/constants';
+import { validateInput } from '@/lib/utils/inputValidation';
 
 export function useProductForm(
   products: Product[],
@@ -10,34 +11,34 @@ export function useProductForm(
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    isAvailable: false,
-    image: '',
-    categoryId: '',
-    status: 0,
-    tags: [] as string[],
-    offerPrice: 0,
-    hasOffer: false,
+    id_product: 0,
+    name_product: '',
+    description_product: '',
+    price_product: 0,
+    stock_product: 0,
+    isAvailable_product: false,
+    image_product: '',
+    id_category_product: 0,
+    status_product: 0,
+    id_tag_product: [] as string[],
+    offerPrice_product: 0,
+    hasOffer_product: false,
   });
 
   const resetForm = () => {
     setFormData({
-      id: '',
-      name: '',
-      description: '',
-      price: 0,
-      stock: 0,
-      isAvailable: false,
-      image: '',
-      categoryId: '',
-      status: 0,
-      tags: [],
-      offerPrice: 0,
-      hasOffer: false,
+      id_product: 0,
+      name_product: '',
+      description_product: '',
+      price_product: 0,
+      stock_product: 0,
+      isAvailable_product: false,
+      image_product: '',
+      id_category_product: 0,
+      status_product: 0,
+      id_tag_product: [],
+      offerPrice_product: 0,
+      hasOffer_product: false,
     });
     setIsEditing(false);
     setFormOpen(false);
@@ -46,14 +47,24 @@ export function useProductForm(
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
+    const { value: cleanValue, isValid } = validateInput(value);
+
     setFormData(prev => ({
       ...prev,
-      [name]: ['price', 'stock', 'offerPrice'].includes(name) ? parseFloat(value) || 0 : value,
+      [name]: ['price_product', 'stock_product', 'offerPrice_product'].includes(name)
+        ? parseFloat(cleanValue) || 0
+        : cleanValue,
     }));
+
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors[name];
+        if (!isValid) {
+          newErrors[name] = 'Este carácter no está permitido';
+        } else {
+          delete newErrors[name];
+        }
         return newErrors;
       });
     }
@@ -72,15 +83,15 @@ export function useProductForm(
 
   const handleTagChange = (tagId: string) => {
     setFormData((prev) => {
-      const currentTags = [...prev.tags];
+      const currentTags = [...prev.id_tag_product];
       if (currentTags.includes(tagId)) {
         if (currentTags.length === 1) {
           toast.error("Debe haber al menos una etiqueta seleccionada");
           return prev;
         }
-        return { ...prev, tags: currentTags.filter((id) => id !== tagId) };
+        return { ...prev, id_tag_product: currentTags.filter((id) => id !== tagId) };
       } else {
-        return { ...prev, tags: [...currentTags, tagId] };
+        return { ...prev, id_tag_product: [...currentTags, tagId] };
       }
     });
   };
@@ -91,19 +102,27 @@ export function useProductForm(
   };
 
   const handleEdit = (product: Product) => {
+
+    let tagIds: string[] = [];
+    try {
+      tagIds = JSON.parse(product.id_tag_product.toString());
+    } catch (e) {
+      console.error("Error parseando tags:", e);
+    }
+  
     setFormData({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      stock: product.stock,
-      isAvailable: product.isAvailable,
-      image: product.image || '',
-      categoryId: product.categoryId,
-      status: product.status,
-      tags: product.tags || [],
-      offerPrice: product.offerPrice,
-      hasOffer: product.offerPrice > 0,
+      id_product: product.id_product,
+      name_product: product.name_product,
+      description_product: product.description_product,
+      price_product: product.price_product,
+      stock_product: product.stock_product,
+      isAvailable_product: product.isAvailable_product || false,
+      image_product: product.image_product || '',
+      id_category_product: product.id_category_product,
+      status_product: product.status_product,
+      id_tag_product: tagIds,
+      offerPrice_product: product.offerPrice_product,
+      hasOffer_product: product.offerPrice_product > 0,
 
     });
     setIsEditing(true);
@@ -114,25 +133,28 @@ export function useProductForm(
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const nameValid = validateInput(formData.name_product);
+    const descValid = validateInput(formData.description_product);
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-    if (!formData.description.trim()) newErrors.description = 'La descripción es requerida';
-    if (!formData.price) newErrors.price = 'El precio es requerido';
-    if (!formData.isAvailable && !formData.stock) newErrors.stock = 'El stock es requerido';
-    if (!formData.image.trim()) newErrors.image = 'La URL de la imagen es requerida';
-    if (!formData.categoryId.trim()) newErrors.categoryId = 'La categoría es requerida';
-    if (!formData.tags.length) newErrors.tags = 'Al menos una etiqueta es requerida';
+
+    if (!nameValid.isValid || !nameValid.value.trim()) newErrors.name_product = 'El nombre es inválido';
+    if (!descValid.isValid || !descValid.value.trim()) newErrors.description_product = 'La descripción es inválida';
+    if (!formData.price_product) newErrors.price_product = 'El precio es requerido';
+    if (!formData.isAvailable_product && !formData.stock_product) newErrors.stock_product = 'El stock es requerido';
+    if (!formData.image_product.trim()) newErrors.image_product = 'La URL de la imagen es requerida';
+    if (!formData.id_category_product) newErrors.id_category_product = 'La categoría es requerida';
+    if (!formData.id_tag_product.length) newErrors.id_tag_product = 'Al menos una etiqueta es requerida';
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     try {
       const method = isEditing ? 'PUT' : 'POST';
-      const url = isEditing ? `/api/products/${formData.id}` : '/api/products';
+      const url = isEditing ? `/api/products/${formData.id_product}` : '/api/products';
 
       const payload = {
         ...formData,
-        stock: formData.isAvailable ? 0 : formData.stock,
+        stock_product: formData.isAvailable_product ? 0 : formData.stock_product,
       };
 
       const res = await fetch(url, {
@@ -153,7 +175,7 @@ export function useProductForm(
       
       setProducts(prev =>
         isEditing
-          ? prev.map(p => (p.id === newProduct.id ? newProduct : p))
+          ? prev.map(p => (p.id_product === newProduct.id_product ? newProduct : p))
           : [newProduct, ...prev]
       );
       resetForm();

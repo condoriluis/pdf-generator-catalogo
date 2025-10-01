@@ -70,42 +70,52 @@ function ProductsManager() {
   const productForm = useProductForm(products, setProducts);
   const productDelete = useProductDelete(products, setProducts);
 
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : 'Sin categoría';
+  const getCategoryName = (categoryId: number) => {
+    const category = categories.find(cat => cat.id_category === categoryId);
+    return category ? category.name_category : 'Sin categoría';
   };
 
-  const getTagNames = (tagIds: string[]) => {
+  const getTagNames = (tagIdsJson: string) => {
+    if (!tagIdsJson) return [];
+  
+    let tagIds: number[] = [];
+    try {
+      tagIds = JSON.parse(tagIdsJson);
+    } catch (e) {
+      return [];
+    }
+  
     return tagIds
-      .map(id => tags.find(t => t.id === id)?.name)
-      .filter(Boolean) as string[];
-  };
+    .map(id => tags.find(t => t.id_tag === Number(id))?.name_tag)
+    .filter(Boolean) as string[];
 
+  };
+  
   const columns: ColumnDef<Product>[] = [
-    { accessorKey: 'id', header: '#', cell: ({ row }) => row.index + 1 },
+    { accessorKey: 'id_product', header: '#', cell: ({ row }) => row.index + 1 },
     {
-      accessorKey: 'image',
+      accessorKey: 'image_product',
       header: 'Imagen',
       cell: ({ row }) => {
-        const image = row.getValue('image') as string;
+        const image = row.getValue('image_product') as string;
         const src = image && image.startsWith('assets/images/')
           ? `${SITE_URL}/${image}`
           : image || `${SITE_URL}/assets/images/image-default.jpg`;
-        return <img src={src} alt={row.getValue('name') as string} className="w-12 h-12 rounded" />;
+        return <img src={src} alt={row.getValue('name_product') as string} className="w-12 h-12 rounded" />;
       },
     },
-    { accessorKey: 'name', header: 'Nombre del producto', cell: ({ row }) => row.getValue('name') },
+    { accessorKey: 'name_product', header: 'Nombre del producto', cell: ({ row }) => row.getValue('name_product') },
     {
-      accessorKey: 'categoryId',
+      accessorKey: 'id_category_product',
       header: 'Categoría',
-      cell: ({ row }) => <Badge variant="default" className="text-sm font-medium">{getCategoryName(row.getValue('categoryId'))}</Badge>,
+      cell: ({ row }) => <Badge variant="default" className="text-sm font-medium">{getCategoryName(row.getValue('id_category_product'))}</Badge>,
     },
     {
-      accessorKey: 'price',
+      accessorKey: 'price_product',
       header: 'Precio',
       cell: ({ row }) => {
-        const price = row.getValue('price') as number;
-        const offerPrice = (row.original as Product).offerPrice;
+        const price = row.getValue('price_product') as number;
+        const offerPrice = (row.original as Product).offerPrice_product;
         if (offerPrice > 0) {
           return (
             <div className="flex items-center gap-2">
@@ -122,54 +132,61 @@ function ProductsManager() {
       },
     },
     {
-      accessorKey: 'stock',
+      accessorKey: 'stock_product',
       header: 'Stock',
       cell: ({ row }) => {
         const product = row.original as Product;
-        return product.isAvailable
+        return product.isAvailable_product
           ? <span className="text-green-600 font-medium">Disponible</span>
-          : row.getValue('stock');
+          : row.getValue('stock_product');
       }
     },
     {
-      accessorKey: 'tags',
+      accessorKey: 'id_tag_product',
       header: 'Etiquetas',
       cell: ({ row }) => {
-        const tagNames = getTagNames(row.getValue('tags') as string[]);
+        const tagNames = getTagNames(row.getValue('id_tag_product') as string);
         return (
           <div className="flex flex-wrap gap-1">
-            {tagNames.length > 0 ? tagNames.map((name, idx) => (
-              <Badge
-                key={`${name}-${idx}`}
-                className="text-xs font-medium text-white"
-                style={{ backgroundColor: tags.find(t => t.name === name)?.color ?? '#888' }}
-              >
-                {name}
-              </Badge>
-            )) : <span className="text-muted-foreground text-xs">Sin tags</span>}
+            {tagNames.length > 0 ? (
+              tagNames.map((name, idx) => {
+                const tag = tags.find(t => t.name_tag === name);
+                return (
+                  <Badge
+                    key={`${name}-${idx}`}
+                    className="text-xs font-medium text-white"
+                    style={{ backgroundColor: tag?.color_tag ?? '#888' }}
+                  >
+                    {name}
+                  </Badge>
+                );
+              })
+            ) : (
+              <span className="text-muted-foreground text-xs">Sin tags</span>
+            )}
           </div>
         );
       },
     },
     {
-      accessorKey: "status",
+      accessorKey: "status_product",
       header: "Estado",
       cell: ({ row }) => {
         const product = row.original as Product;
-        const checked = product.status === 1;
+        const checked = product.status_product === 1;
         const handleToggle = async (newValue: boolean) => {
           try {
-            const res = await fetch(`/api/products/${product.id}/status`, {
+            const res = await fetch(`/api/products/${product.id_product}/status`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: newValue ? 1 : 0 }),
+              body: JSON.stringify({ status_product: newValue ? 1 : 0 }),
             });
             if (!res.ok) throw new Error("Error al actualizar el estado");
 
             toast.success(`Producto ${newValue ? "activado" : "desactivado"} correctamente`)
 
             setProducts(prev =>
-              prev.map(p => (p.id === product.id ? { ...p, status: newValue ? 1 : 0 } : p))
+              prev.map(p => (p.id_product === product.id_product ? { ...p, status_product: newValue ? 1 : 0 } : p))
             );
             
           } catch (err) {
@@ -187,7 +204,7 @@ function ProductsManager() {
         );
       },
     },
-    { accessorKey: 'createdAt', header: 'Fecha de Creación', cell: ({ row }) => new Date(row.getValue('createdAt')).toLocaleDateString() },
+    { accessorKey: 'date_created_product', header: 'Fecha de Creación', cell: ({ row }) => new Date(row.getValue('date_created_product')).toLocaleDateString() },
     {
       id: 'actions',
       header: 'Acciones',
@@ -196,7 +213,7 @@ function ProductsManager() {
           <Button variant="ghost" size="sm" onClick={() => productForm.handleEdit(row.original)}>
             <Edit className="h-4 w-4 text-blue-700" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => productDelete.confirmDelete(row.original.id)}>
+          <Button variant="ghost" size="sm" onClick={() => productDelete.confirmDelete(row.original.id_product.toString())}>
             <Trash2 className="h-4 w-4 text-red-700" />
           </Button>
         </div>
@@ -230,27 +247,27 @@ function ProductsManager() {
               <Label htmlFor="name">Nombre</Label>
               <Input
                 id="name"
-                name="name"
-                value={productForm.formData.name}
+                name="name_product"
+                value={productForm.formData.name_product}
                 onChange={productForm.handleChange}
-                className={`w-full p-2 border rounded-lg ${productForm.errors.name ? 'border-red-500' : ''}`}
+                className={`w-full p-2 border rounded-lg ${productForm.errors.name_product ? 'border-red-500' : ''}`}
               />
-              {productForm.errors.name && <p className="text-red-500 text-sm mt-1">{productForm.errors.name}</p>}
+              {productForm.errors.name_product && <p className="text-red-500 text-sm mt-1">{productForm.errors.name_product}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
               <Textarea
                 id="description"
-                name="description"
-                value={productForm.formData.description}
+                name="description_product"
+                value={productForm.formData.description_product}
                 onChange={productForm.handleChange}
-                className={productForm.errors.description ? 'border-red-500' : ''}
+                className={productForm.errors.description_product ? 'border-red-500' : ''}
               />
-              {productForm.errors.description && <p className="text-red-500 text-sm">{productForm.errors.description}</p>}
+              {productForm.errors.description_product && <p className="text-red-500 text-sm">{productForm.errors.description_product}</p>}
             </div>
             <div
               className={`grid gap-4 ${
-                productForm.formData.hasOffer ? 'grid-cols-3' : 'grid-cols-2'
+                productForm.formData.hasOffer_product ? 'grid-cols-3' : 'grid-cols-2'
               }`}
             >
               {/* Precio Normal + Switch */}
@@ -259,12 +276,12 @@ function ProductsManager() {
                   <Label htmlFor="price">Precio Normal</Label>
                   <div className="flex items-center gap-2">
                     <Switch
-                      checked={productForm.formData.hasOffer}
+                      checked={productForm.formData.hasOffer_product}
                       onCheckedChange={(checked) =>
                         productForm.setFormData((prev) => ({
                           ...prev,
-                          hasOffer: checked,
-                          offerPrice: checked ? prev.offerPrice : 0,
+                          hasOffer_product: checked,
+                          offerPrice_product: checked ? prev.offerPrice_product : 0,
                         }))
                       }
                     />
@@ -273,11 +290,11 @@ function ProductsManager() {
                 </div>
                 <Input
                   id="price"
-                  name="price"
+                  name="price_product"
                   type="number"
                   step="0.01"
                   min="0"
-                  value={productForm.formData.price}
+                  value={productForm.formData.price_product}
                   onChange={productForm.handleChange}
                   className={productForm.errors.price ? 'border-red-500' : ''}
                 />
@@ -285,30 +302,30 @@ function ProductsManager() {
               </div>
 
               {/* Precio de Oferta */}
-              {productForm.formData.hasOffer && (
+              {productForm.formData.hasOffer_product && (
                 <div className="space-y-3">
                   <Label htmlFor="offerPrice">Precio de Oferta</Label>
                   <Input
                     id="offerPrice"
-                    name="offerPrice"
+                    name="offerPrice_product"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={productForm.formData.offerPrice}
+                    value={productForm.formData.offerPrice_product}
                     onChange={(e) =>
                       productForm.setFormData((prev) => ({
                         ...prev,
-                        offerPrice: parseFloat(e.target.value),
+                        offerPrice_product: parseFloat(e.target.value),
                       }))
                     }
                   />
-                  {productForm.formData.offerPrice > 0 && productForm.formData.price > 0 && (
+                  {productForm.formData.offerPrice_product > 0 && productForm.formData.price_product > 0 && (
                     <p className="text-green-600 text-sm font-medium mt-1">
                       ¡Descuento:{' '}
                       {new Intl.NumberFormat('es-BO', {
                         style: 'currency',
                         currency: 'BOB',
-                      }).format(productForm.formData.price - productForm.formData.offerPrice)}!
+                      }).format(productForm.formData.price_product - productForm.formData.offerPrice_product)}!
                     </p>
                   )}
                 </div>
@@ -321,12 +338,12 @@ function ProductsManager() {
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="isAvailable"
-                      checked={productForm.formData.isAvailable}
+                      checked={productForm.formData.isAvailable_product}
                       onCheckedChange={(checked) =>
                         productForm.setFormData((prev) => ({
                           ...prev,
-                          isAvailable: checked as boolean,
-                          stock: checked ? 0 : prev.stock,
+                          isAvailable_product: checked as boolean,
+                          stock_product: checked ? 0 : prev.stock_product,
                         }))
                       }
                     />
@@ -334,19 +351,19 @@ function ProductsManager() {
                   </div>
                 </div>
 
-                {!productForm.formData.isAvailable ? (
+                {!productForm.formData.isAvailable_product ? (
                   <>
                     <Input
                       id="stock"
-                      name="stock"
+                      name="stock_product"
                       type="number"
                       min="0"
-                      value={productForm.formData.stock}
+                      value={productForm.formData.stock_product}
                       onChange={productForm.handleChange}
-                      className={productForm.errors.stock ? 'border-red-500' : ''}
+                      className={productForm.errors.stock_product ? 'border-red-500' : ''}
                     />
-                    {productForm.errors.stock && (
-                      <p className="text-red-500 text-sm">{productForm.errors.stock}</p>
+                    {productForm.errors.stock_product && (
+                      <p className="text-red-500 text-sm">{productForm.errors.stock_product}</p>
                     )}
                   </>
                 ) : (
@@ -360,23 +377,24 @@ function ProductsManager() {
               <div className="space-y-3">
                 <Label htmlFor="categoryId">Categoría</Label>
                 <Select 
-                  onValueChange={(value) => productForm.handleSelectChange('categoryId', value)}
-                  value={productForm.formData.categoryId}
+                  onValueChange={(value) => productForm.handleSelectChange('id_category_product', value)}
+                  value={productForm.formData.id_category_product.toString()}
                 >
                   <SelectTrigger 
-                    className={`w-full ${productForm.errors.categoryId ? 'border-red-500' : ''}`}
+                    className={`w-full ${productForm.errors.id_category_product ? 'border-red-500' : ''}`}
                   >
-                    <SelectValue placeholder="Selecciona una categoría" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">Selecciona una categoría</SelectItem>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
+                      <SelectItem key={category.id_category} value={category.id_category.toString()}>
+                        {category.name_category}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {productForm.errors.categoryId && <p className="text-red-500 text-sm">{productForm.errors.categoryId}</p>}
+                {productForm.errors.id_category_product && <p className="text-red-500 text-sm">{productForm.errors.id_category_product}</p>}
               </div>
 
               <div className="space-y-1">
@@ -398,8 +416,8 @@ function ProductsManager() {
                 <div className="flex items-center gap-1">
                   <Input
                     id="image"
-                    name="image"
-                    value={productForm.formData.image}
+                    name="image_product"
+                    value={productForm.formData.image_product}
                     onChange={productForm.handleChange}
                     placeholder="https://example.com/image.png"
                     className="flex-1"
@@ -414,7 +432,7 @@ function ProductsManager() {
                     <ImageIcon className="w-5 h-5" />
                   </Button>
                 </div>
-                {productForm.errors.image && <p className="text-red-500 text-sm">{productForm.errors.image}</p>}
+                {productForm.errors.image_product && <p className="text-red-500 text-sm">{productForm.errors.image_product}</p>}
 
                 <Dialog open={filesDialogOpen} onOpenChange={setFilesDialogOpen}>
                   <DialogContent className="max-w-4xl h-[80vh] sm:max-w-[70%] overflow-y-auto p-0 pt-10">
@@ -423,7 +441,7 @@ function ProductsManager() {
                     </VisuallyHidden>
                     <FilesPage
                       onSelect={(url) => {
-                        productForm.setFormData((prev) => ({ ...prev, image: url }))
+                        productForm.setFormData((prev) => ({ ...prev, image_product: url }))
                         setFilesDialogOpen(false)
                       }}
                     />
@@ -437,18 +455,18 @@ function ProductsManager() {
               <Label className="block mb-1">Etiquetas</Label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {tags.map((tag) => (
-                  <div key={tag.id} className="flex items-center space-x-2">
+                  <div key={tag.id_tag} className="flex items-center space-x-2">
                     <Checkbox
                       className="w-5 h-5"
-                      checked={productForm.formData.tags.includes(tag.id)}
-                      onCheckedChange={() => productForm.handleTagChange(tag.id)}
-                      id={`tag-${tag.id}`}
+                      checked={productForm.formData.id_tag_product.includes(tag.id_tag.toString())}
+                      onCheckedChange={() => productForm.handleTagChange(tag.id_tag.toString())}
+                      id={`tag-${tag.id_tag}`}
                     />
-                    <Label htmlFor={`tag-${tag.id}`}>{tag.name}</Label>
+                    <Label htmlFor={`tag-${tag.id_tag}`}>{tag.name_tag}</Label>
                   </div>
                 ))}
               </div>
-              {productForm.errors.tags && <p className="text-red-500 text-sm">{productForm.errors.tags}</p>}
+              {productForm.errors.id_tag_product && <p className="text-red-500 text-sm">{productForm.errors.id_tag_product}</p>}
             </div>
 
             <DialogFooter className="flex justify-end gap-2">

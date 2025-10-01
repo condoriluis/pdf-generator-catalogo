@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTags, createTag } from '@/lib/utils/dataJson';
+import { TagService } from './TagService';
 
 // GET /api/tags - Obtener todos los tags
 export async function GET(request: NextRequest) {
   try {
-    const tags = await getTags();
+    const tags = await TagService.getTags();
     return NextResponse.json(tags);
   } catch (error) {
     console.error('Error al obtener tags:', error);
@@ -18,17 +18,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validar datos requeridos
-    if (!body.name) {
+    if (!body.name_tag) {
       return NextResponse.json(
-        { error: 'Falta el campo requerido: name' },
+        { error: 'Falta el campo requerido: nombre' },
         { status: 400 }
       );
     }
     
-    const newTag = await createTag({
-      name: body.name,
-      color: body.color || '#000000',
-    });
+    const newTagId = await TagService.createTag(body.name_tag, body.color_tag || '#000000');
+    const newTag = await TagService.getTagById(newTagId);
     
     return NextResponse.json(newTag, { status: 201 });
   } catch (error) {

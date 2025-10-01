@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getFiles, createFile, updateFileName, deleteFile } from '@/lib/utils/dataJson';
+import { FileService } from './FileService';
 
 // GET /api/archivos - Obtener todos los archivos
 export async function GET(request: NextRequest) {
   try {
-    const files = await getFiles();
+    const files = await FileService.getFiles();
     return NextResponse.json(files);
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener archivos' }, { status: 500 });
@@ -16,26 +16,38 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (!body.name || !body.name_folder || !body.extension || !body.type || !body.size || !body.url) {
+    if (!body.name_file || !body.name_folder_file || !body.extension_file || !body.type_file || !body.size_file || !body.url_file) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: name, name_folder, extension, type, size, url' },
+        { error: 'Faltan campos requeridos: nombre, nombre_carpeta, extension, tipo, tamaño, url' },
         { status: 400 }
       );
     }
 
-    const id_mailchimp = body.name_folder === 'Mailchimp' ? body.id_mailchimp : '';
-    
-    const newFile = await createFile({
-      name: body.name,
-      name_folder: body.name_folder,
-      extension: body.extension,
-      type: body.type,
-      size: body.size,
-      url: body.url,
+    const id_mailchimp = body.name_folder_file === 'Mailchimp' ? body.id_mailchimp : null;
+
+    const payload = {
+      name_file: body.name_file,
+      name_folder_file: body.name_folder_file,
+      extension_file: body.extension_file,
+      type_file: body.type_file,
+      size_file: body.size_file,
+      url_file: body.url_file,
       id_mailchimp: id_mailchimp,
-    });
-    
+    };
+
+    const newFiletId = await FileService.createFile(
+      payload.name_file,
+      payload.name_folder_file,
+      payload.extension_file,
+      payload.type_file,
+      payload.size_file,
+      payload.url_file,
+      payload.id_mailchimp,
+    );
+
+    const newFile = await FileService.getFileById(newFiletId.id_file);
     return NextResponse.json(newFile, { status: 201 });
+
   } catch (error) {
     return NextResponse.json({ error: 'Error al crear archivo' }, { status: 500 });
   }
@@ -44,11 +56,11 @@ export async function POST(request: NextRequest) {
 
 // PATCH /api/archivos - Actualizar un nombre
 export async function PATCH(req: NextRequest) {
-  const { id, name } = await req.json();
+  const { id_file, name_file } = await req.json();
 
-  if (!id || !name) return NextResponse.json({ error: 'Faltan campos requeridos: id, name' }, { status: 400 });
+  if (!id_file || !name_file) return NextResponse.json({ error: 'Faltan campos requeridos: id_file, name_file' }, { status: 400 });
 
-  const updated = await updateFileName(id, name);
+  const updated = await FileService.updateFileName(Number(id_file), name_file);
 
   if (!updated) return NextResponse.json({ error: 'Error al actualizar nombre' }, { status: 404 });
 
@@ -58,11 +70,11 @@ export async function PATCH(req: NextRequest) {
 // DELETE /api/archivos - Eliminar un archivo
 export async function DELETE(req: NextRequest) {
   try {
-    const { id } = await req.json();
+    const { id_file } = await req.json();
 
-    if (!id) return NextResponse.json({ error: 'No se proporcionó id' }, { status: 400 })
+    if (!id_file) return NextResponse.json({ error: 'No se proporcionó id' }, { status: 400 })
 
-    const result = await deleteFile(id);
+    const result = await FileService.deleteFile(Number(id_file));
 
     if (!result) {
       return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });

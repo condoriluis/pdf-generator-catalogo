@@ -14,8 +14,8 @@ export function useCategories() {
       const data = await res.json();
       const sorted = data.sort(
         (a: Category, b: Category) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(b.date_created_category).getTime() -
+          new Date(a.date_created_category).getTime()
       );
       setCategories(sorted);
     } catch (err) {

@@ -68,22 +68,22 @@ function CategoriesManager() {
 
   // Definición de columnas
   const columns: ColumnDef<Category>[] = [
-    { accessorKey: 'id', header: '#', cell: ({ row }) => row.index + 1 },
+    { accessorKey: 'id_category', header: '#', cell: ({ row }) => row.index + 1 },
     {
-      accessorKey: 'name',
+      accessorKey: 'name_category',
       header: 'Nombre de categoría',
       cell: ({ row }) => (
         <Badge variant="default" className="text-sm font-medium">
-          {row.getValue('name')}
+          {row.getValue('name_category')}
         </Badge>
       ),
     },
-    { accessorKey: 'description', header: 'Descripción' },
+    { accessorKey: 'description_category', header: 'Descripción' },
     {
-      accessorKey: 'createdAt',
+      accessorKey: 'date_created_category',
       header: 'Fecha de Creación',
       cell: ({ row }) =>
-        new Date(row.getValue('createdAt')).toLocaleDateString(),
+        new Date(row.getValue('date_created_category')).toLocaleDateString(),
     },
     {
       id: 'actions',
@@ -100,7 +100,7 @@ function CategoriesManager() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => confirmDelete(row.original.id)}
+            onClick={() => confirmDelete(row.original.id_category)}
           >
             <Trash2 className="h-4 w-4 text-red-700" />
           </Button>
@@ -136,36 +136,36 @@ function CategoriesManager() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre</Label>
+              <Label htmlFor="name_category">Nombre</Label>
               <Input
-                id="name"
+                id="name_category"
                 type="text"
-                name="name"
-                value={formData.name}
+                name="name_category"
+                value={formData.name_category}
                 onChange={handleChange}
                 className={`w-full p-2 border rounded-lg ${
-                  errors.name ? 'border-red-500' : ''
+                  errors.name_category ? 'border-red-500' : ''
                 }`}
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              {errors.name_category && (
+                <p className="text-red-500 text-sm mt-1">{errors.name_category}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description_category">Descripción</Label>
               <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
+                id="description_category"
+                name="description_category"
+                value={formData.description_category}
                 onChange={handleChange}
                 className={`w-full p-2 border rounded-lg ${
-                  errors.description ? 'border-red-500' : ''
+                  errors.description_category ? 'border-red-500' : ''
                 }`}
                 rows={2}
               />
-              {errors.description && (
+              {errors.description_category && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.description}
+                  {errors.description_category}
                 </p>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Tag } from '@/lib/constants';
+import { validateInput } from '@/lib/utils/inputValidation';
 
 export function useTagForm(
   tags: Tag[],
@@ -10,27 +11,29 @@ export function useTagForm(
   const [isEditing, setIsEditing] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    color: '#3B82F6',
+    id_tag: 0,
+    name_tag: '',
+    color_tag: '',
   });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    const { value: cleanValue, isValid } = validateInput(value);
+
+    setFormData(prev => ({ ...prev, [name]: cleanValue }));
     if (errors[name]) {
-      setErrors(prev => {
-        const copy = { ...prev };
-        delete copy[name];
-        return copy;
-      });
+      setErrors(prev => ({
+        ...prev,
+        [name]: !isValid ? 'Este carácter no está permitido' : '',
+      }));
     }
   };
 
   const resetForm = () => {
-    setFormData({ id: '', name: '', color: '#3B82F6' });
+    setFormData({ id_tag: 0, name_tag: '', color_tag: '' });
     setIsEditing(false);
     setFormOpen(false);
     setErrors({});
@@ -44,22 +47,33 @@ export function useTagForm(
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const nameValid = validateInput(formData.name_tag);
+    const colorValid = validateInput(formData.color_tag);
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
-    if (!formData.color.trim())
-      newErrors.color = 'El color es requerido';
+
+    if (!nameValid.isValid || !nameValid.value.trim())
+      newErrors.name_tag = 'Nombre inválido';
+    if (!colorValid.isValid || !colorValid.value.trim())
+      newErrors.color_tag = 'Color inválido';
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+
+    const cleanData = {
+      ...formData,
+      name_tag: nameValid.value,
+      color_tag: colorValid.value,
+    };
 
     try {
       const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing
-        ? `/api/tags/${formData.id}`
+        ? `/api/tags/${formData.id_tag}`
         : '/api/tags';
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanData),
       });
       if (!res.ok)
         throw new Error(isEditing ? 'Error al actualizar' : 'Error al crear');
@@ -72,7 +86,7 @@ export function useTagForm(
       
       setTags(prev =>
         isEditing
-          ? prev.map(c => (c.id === newTag.id ? newTag : c))
+          ? prev.map(c => (c.id_tag === newTag.id_tag ? newTag : c))
           : [newTag, ...prev]
       );
 
@@ -85,9 +99,9 @@ export function useTagForm(
 
   const handleEdit = (tag: Tag) => {
     setFormData({
-      id: tag.id,
-      name: tag.name,
-      color: tag.color || '',
+      id_tag: tag.id_tag,
+      name_tag: tag.name_tag,
+      color_tag: tag.color_tag || '',
     });
     setIsEditing(true);
     setErrors({});

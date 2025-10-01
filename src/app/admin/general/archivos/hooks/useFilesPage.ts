@@ -2,28 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-export type FileItem = {
-  __originalName: string;
-  id: number | string;
-  name: string;
-  extension: string;
-  size: string;
-  folder: string;
-  id_mailchimp?: number;
-  link: string;
-  modified: string;
-  preview: string;
-  selected?: boolean;
-  __originalFile?: File;
-};
+import { UploadFile } from '@/lib/constants/catalog';
 
 export function useFilesPage() {
-  const [files, setFiles] = useState<FileItem[]>([]);
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(15);
 
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<UploadFile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [folder, setFolder] = useState<'Server' | 'AWS S3' | 'Cloudinary' | 'Mailchimp'>('Server');
   const [filterBy, setFilterBy] = useState('all');
@@ -44,19 +30,22 @@ export function useFilesPage() {
         const res = await fetch('/api/archivos');
         if (!res.ok) throw new Error('Error al obtener archivos');
 
-        const data: FileItem[] = await res.json();
+        const data: UploadFile[] = await res.json();
 
         const adapted = data.map((f: any) => ({
-          id: f.id,
-          name: f.name,
-          __originalName: f.name,
-          extension: '.' + f.extension,
-          size: formatBytes(f.size),
-          folder: f.name_folder,
+          id_file: f.id_file,
+          name_file: f.name_file,
+          name_folder_file: f.name_folder_file,
+          extension_file: `.${f.extension_file}`,
+          type_file: f.type_file,
+          size_file: f.size_file,
+          size_file_display: formatBytes(f.size_file),
+          url_file: f.url_file,
           id_mailchimp: f.id_mailchimp,
-          link: f.url,
-          preview: f.url,
-          modified: f.updatedAt,
+          date_updated_file: f.date_updated_file,
+
+          __originalName: f.name_file,
+          preview: f.url_file,
         }));
 
         setFiles(adapted);
@@ -75,49 +64,55 @@ export function useFilesPage() {
     return mb.toFixed(2) + ' MB';
   };  
 
-  const combinedFiles: FileItem[] = [
+  const combinedFiles: UploadFile[] = [
     ...selectedFiles.map((file, i) => ({
-      id: `selected-${i}`,
-      name: file.name.replace(/\.[^/.]+$/, ''),
-      extension: '.' + file.name.split('.').pop(),
-      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-      folder: folder,
-      link: '',
-      preview: URL.createObjectURL(file),
-      modified: new Date().toISOString(),
+      id_file: 0,
+      id_temp: file.id_temp ?? crypto.randomUUID(),
+      name_file: file.name_file.replace(/\.[^/.]+$/, ''),
+      name_folder_file: folder,
+      extension_file: '.' + file.name_file.split('.').pop(),
+      size_file: file.size_file,
+      size_file_display: (file.size_file / 1024 / 1024).toFixed(2) + ' MB',
+      type_file: file.type_file,
+      url_file: file.__originalFile ? URL.createObjectURL(file.__originalFile) : '',
+      date_updated_file: new Date(),
       selected: true,
-      __originalName: file.name.replace(/\.[^/.]+$/, ''),
-      __originalFile: file,
+      __originalName: file.name_file.replace(/\.[^/.]+$/, ''),
+      __originalFile: file.__originalFile,
+      preview: file.__originalFile ? URL.createObjectURL(file.__originalFile) : '',
     })),
-    ...files,
+    ...files.map(f => ({
+      ...f,
+      id_temp: f.id_temp ?? crypto.randomUUID(),
+    })),
   ];
 
   const displayedFiles = combinedFiles
     .filter(file => {
-      const matchesSearch = file.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = file.name_file.toLowerCase().includes(search.toLowerCase());
 
       const safeFilter = filterBy ?? 'all';
       const extension = safeFilter.split('/')[1];
-      const matchesFilter = safeFilter === 'all' ? true : (extension ? file.link.endsWith(extension) : true);
+      const matchesFilter = safeFilter === 'all' ? true : (extension ? file.url_file.endsWith(extension) : true);
       
-      const matchesFolder = selectedFiles.length === 0 ? folderFilters[file.folder] : true;
+      const matchesFolder = selectedFiles.length === 0 ? folderFilters[file.name_folder_file] : true;
       
       return matchesSearch && matchesFilter && matchesFolder;
     })
     .sort((a, b) => {
       switch (sortBy) {
         case 'newest':
-          return new Date(b.modified).getTime() - new Date(a.modified).getTime();
+          return new Date(b.date_updated_file).getTime() - new Date(a.date_updated_file).getTime();
         case 'oldest':
-          return new Date(a.modified).getTime() - new Date(b.modified).getTime();
+          return new Date(a.date_updated_file).getTime() - new Date(b.date_updated_file).getTime();
         case 'largest':
-          return parseFloat(b.size.replace(' MB','')) - parseFloat(a.size.replace(' MB',''));
+          return b.size_file - a.size_file;
         case 'smallest':
-          return parseFloat(a.size.replace(' MB','')) - parseFloat(b.size.replace(' MB',''));
+          return a.size_file - b.size_file;
         case 'a-z':
-          return a.name.localeCompare(b.name);
+          return a.name_file.localeCompare(b.name_file);
         case 'z-a':
-          return b.name.localeCompare(a.name);
+          return b.name_file.localeCompare(a.name_file);
         default:
           return 0;
       }
@@ -144,22 +139,43 @@ export function useFilesPage() {
   
     if (validFiles.length > 0) {
       setSelectedFiles(prev => {
-        const combined = [...prev, ...validFiles];
+        const combined = [
+          ...prev,
+          ...validFiles.map(file => ({
+            id_file: 0,
+            id_temp: crypto.randomUUID(),
+            name_file: file.name,
+            name_folder_file: folder,
+            extension_file: '.' + file.name.split('.').pop(),
+            type_file: file.type,
+            size_file: file.size,
+            url_file: '',
+            date_updated_file: new Date(),
+            preview: URL.createObjectURL(file),
+            __originalName: file.name,
+            __originalFile: file,
+          }))
+        ];
+    
         const uniqueFiles = combined.filter(
           (file, index, self) =>
-            index === self.findIndex(f => f.name === file.name && f.size === file.size)
+            index === self.findIndex(f =>
+              f.name_file === file.name_file &&
+              f.size_file === file.size_file
+            )
         );
+    
         return uniqueFiles;
       });
-  
+    
       setChoosingFolder(true);
-  
+    
       const newProgress: Record<string, number> = {};
       validFiles.forEach(file => {
         newProgress[file.name] = 0;
       });
       setUploadingProgress(prev => ({ ...prev, ...newProgress }));
-    } 
+    }
   
     if (invalidFiles.length > 0) {
       toast.error(`Formato no permitido: ${invalidFiles.map(f => f.name).join(', ')}`);
@@ -176,10 +192,11 @@ export function useFilesPage() {
 
     try {
       for (const file of selectedFiles) {
-        setUploadingProgress(prev => ({ ...prev, [file.name]: 0 }));
+        setUploadingProgress(prev => ({ ...prev, [file.name_file]: 0 }));
 
         const formData = new FormData();
-        formData.append('file', file);
+        if (!file.__originalFile) continue;
+        formData.append('file', file.__originalFile as Blob);
 
         const uploadFile = (endpoint: string): Promise<{ url: string; mailchimpId?: string }> => {
           return new Promise((resolve, reject) => {
@@ -189,7 +206,7 @@ export function useFilesPage() {
             xhr.upload.onprogress = (event) => {
               if (event.lengthComputable) {
                 const percent = Math.round((event.loaded / event.total) * 100);
-                setUploadingProgress(prev => ({ ...prev, [file.name]: percent }));
+                setUploadingProgress(prev => ({ ...prev, [file.name_file]: percent }));
               }
             };
 
@@ -235,33 +252,37 @@ export function useFilesPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: file.name.replace(/\.[^/.]+$/, ''),
-            extension: file.name.split('.').pop(),
-            type: file.type,
-            size: file.size,
-            name_folder: folder,
-            url: result.url,
-            id_mailchimp: result.mailchimpId || '',
-            updatedAt: new Date().toISOString(),
+            name_file: file.name_file.replace(/\.[^/.]+$/, ''),
+            name_folder_file: folder,
+            extension_file: file.name_file.split('.').pop(),
+            type_file: file.type_file,
+            size_file: file.size_file,
+            url_file: result.url,
+            id_mailchimp: result.mailchimpId ? Number(result.mailchimpId) : null,
+            date_updated_file: new Date(),
           }),
         });        
 
-        setUploadingProgress(prev => ({ ...prev, [file.name]: 100 }));
+        setUploadingProgress(prev => ({ ...prev, [file.name_file]: 100 }));
 
       }
 
       toast.success('Archivos subidos correctamente');
 
-      const newFiles: FileItem[] = selectedFiles.map((file, i) => ({
-        id: files.length + i + 1,
-        name: file.name.replace(/\.[^/.]+$/, ''),
-        __originalName: file.name.replace(/\.[^/.]+$/, ''),
-        extension: '.' + file.name.split('.').pop(),
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
-        folder,
-        link: urls[i] || '',
+      const newFiles: UploadFile[] = selectedFiles.map((file, i) => ({
+        id_file: files.length + i + 1,
+        name_file: file.name_file.replace(/\.[^/.]+$/, ''),
+        name_folder_file: folder,
+        extension_file: '.' + file.name_file.split('.').pop(),
+        size_file: file.size_file,
+        size_file_display: (file.size_file / 1024 / 1024).toFixed(2) + ' MB',
+        type_file: file.type_file,
+        url_file: urls[i] || '',
+        date_updated_file: new Date(),
+
+        __originalName: file.name_file.replace(/\.[^/.]+$/, ''),
+        __originalFile: file.__originalFile,
         preview: urls[i] || '',
-        modified: new Date().toISOString(),
       }));
 
       setFiles(prev => [...newFiles, ...prev]);
@@ -276,10 +297,10 @@ export function useFilesPage() {
     setUploading(false);
   };
 
-  const handleDelete = async (file: FileItem) => {
+  const handleDelete = async (file: UploadFile) => {
     try {
       let endpoint = '';
-      switch (file.folder) {
+      switch (file.name_folder_file) {
         case 'Server': endpoint = '/api/storage/server'; break;
         case 'AWS S3': endpoint = '/api/storage/s3'; break;
         case 'Cloudinary': endpoint = '/api/storage/cloudinary'; break;
@@ -289,16 +310,16 @@ export function useFilesPage() {
       await fetch(endpoint, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileUrl: file.link, idMailchimp: file.id_mailchimp }),
+        body: JSON.stringify({ fileUrl: file.url_file, idMailchimp: file.id_mailchimp }),
       });
 
       await fetch(`/api/archivos`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: file.id }),
+        body: JSON.stringify({ id_file: file.id_file }),
       });
   
-      setFiles(prev => prev.filter(f => f.id !== file.id));
+      setFiles(prev => prev.filter(f => f.id_file !== file.id_file));
       toast.success('Archivo eliminado correctamente');
 
     } catch (err) {

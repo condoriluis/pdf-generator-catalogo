@@ -1,31 +1,8 @@
 "use client";
 
+import { Category, Product, Tag } from "@/lib/constants";
 import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Legend } from "recharts";
-
-interface Product {
-  id: number;
-  name: string;
-  categoryId: number;
-  tags: number[];
-  price: number;
-  offerPrice: number;
-  stock: number;
-  isAvailable: boolean;
-  image?: string;
-  description?: string;
-}
-
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface Tag {
-  id: number;
-  name: string;
-  color?: string;
-}
 
 const COLORS = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
 
@@ -38,54 +15,59 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resProducts, resCategories, resTags] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/categories"),
-          fetch("/api/tags"),
-        ]);
+  const fetchData = async () => {
+    try {
+      const res = await fetch("/api/dashboard");
+      if (!res.ok) throw new Error("Error al cargar datos del dashboard");
+      const { products, categories, tags } = await res.json();
 
-        const [dataProducts, dataCategories, dataTags] = await Promise.all([
-          resProducts.json(),
-          resCategories.json(),
-          resTags.json(),
-        ]);
+      const parsedProducts = products.map((p: Product) => ({
+        ...p,
+        isAvailable_product: Boolean(p.isAvailable_product),
+        hasOffer_product: Boolean(p.hasOffer_product),
+        id_tag_product: Array.isArray(p.id_tag_product) 
+            ? p.id_tag_product 
+            : JSON.parse(p.id_tag_product)
+      }));
 
-        setProducts(dataProducts);
-        setCategories(dataCategories);
-        setTags(dataTags);
+      setProducts(parsedProducts);
+      setCategories(categories);
+      setTags(tags);
 
-        const groupCategory = dataCategories
+      // agrupar por categoría
+      const groupCategory = categories
         .map((cat: Category) => ({
-          name: cat.name,
-          value: dataProducts.filter((p: Product) => p.categoryId === cat.id).length,
+          name: cat.name_category,
+          value: products.filter((p: Product) => p.id_category_product === cat.id_category).length,
         }))
         .filter((item: any) => item.value > 0)
         .sort((a: any, b: any) => b.value - a.value)
         .slice(0, 10);
-        setProductsByCategory(groupCategory);
+      setProductsByCategory(groupCategory);
 
-        const groupTag = dataTags
+      // agrupar por tag
+      const groupTag = tags
         .map((tag: Tag) => ({
-          name: tag.name,
-          value: dataProducts.filter((p: Product) => p.tags.includes(tag.id)).length,
+          name: tag.name_tag,
+          value: products.filter((p: Product) =>
+            p.id_tag_product.includes(tag.id_tag.toString())
+          ).length,
         }))
         .filter((item: any) => item.value > 0)
         .sort((a: any, b: any) => b.value - a.value)
         .slice(0, 10);
-        setProductsByTag(groupTag);
+      setProductsByTag(groupTag);
 
+    } catch (err) {
+      console.error("Error cargando datos del dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      } catch (err) {
-        console.error("Error cargando datos del dashboard:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  fetchData();
+}, []);
 
-    fetchData();
-  }, []);
 
   return (
     <>
@@ -205,19 +187,19 @@ const AdminDashboard = () => {
         <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-gray-200">Últimos Productos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {products.slice(-4).reverse().map((p) => {
-            const category = categories.find(c => c.id === p.categoryId);
-            const productTags = p.tags.map(tagId => tags.find(t => t.id === tagId)).filter(Boolean);
+            const category = categories.find(c => c.id_category === p.id_category_product);
+            const productTags = p.id_tag_product.map(tagId => tags.find(t => t.id_tag.toString() === tagId)).filter(Boolean);
 
             return (
               <div
-                key={p.id}
+                key={p.id_product}
                 className="flex flex-col md:flex-row border rounded-2xl p-4 hover:shadow-md transition-transform duration-300 transform hover:-translate-y-1 hover:scale-[1.02] bg-white dark:bg-neutral-900"
               >
-                {p.image && (
+                {p.image_product && (
                   <div className="w-full md:w-36 h-28 md:h-28 overflow-hidden rounded-xl flex-shrink-0 mb-3 md:mb-0 md:mr-4">
                     <img
-                      src={p.image}
-                      alt={p.name}
+                      src={p.image_product}
+                      alt={p.name_product}
                       className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                     />
                   </div>
@@ -225,36 +207,36 @@ const AdminDashboard = () => {
 
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{p.name}</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{p.name_product}</h3>
                     
-                    {p.description && (
+                    {p.description_product && (
                       <p className="text-gray-500 text-sm mt-1">
-                        {p.description.length > 60 ? p.description.slice(0, 60) + "..." : p.description}
+                        {p.description_product.length > 60 ? p.description_product.slice(0, 60) + "..." : p.description_product}
                       </p>
                     )}
 
                   </div>
         
                   <div className="flex items-baseline justify-between flex-wrap gap-2 mb-3">
-                    {p.offerPrice && Number(p.offerPrice) > 0 ? (
+                    {p.offerPrice_product && Number(p.offerPrice_product) > 0 ? (
                       <>
                         <span className="text-gray-500 line-through text-sm">
-                          Antes: {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.price))}
+                          Antes: {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.price_product))}
                         </span>
                         <span className="text-green-600 font-bold text-lg">
-                          Oferta: {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.offerPrice))}
+                          Oferta: {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.offerPrice_product))}
                         </span>
                       </>
                     ) : (
                       <span className="text-green-600 font-bold text-lg">
-                        {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.price))}
+                        {new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(p.price_product))}
                       </span>
                     )}
 
-                    {p.isAvailable ? (
+                    {p.isAvailable_product ? (
                       <p className="text-gray-400 text-sm">Stock: <span className="text-green-600 text-sm">Disponible</span></p>
                     ) : (
-                      <p className="text-gray-400 text-sm">Stock: {p.stock} unidades</p>
+                      <p className="text-gray-400 text-sm">Stock: {p.stock_product} unidades</p>
                     )}
                     
                   </div>
@@ -262,7 +244,7 @@ const AdminDashboard = () => {
                   <div>
                     {category && (
                       <span className="inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full bg-blue-500 text-white">
-                        Categoría: {category.name}
+                        Categoría: {category.name_category}
                       </span>
                     )}
                   </div>
@@ -270,14 +252,14 @@ const AdminDashboard = () => {
                   <div className="flex flex-wrap gap-2 mt-3">
                     {productTags.map(tag => (
                       <span
-                        key={tag!.id}
+                        key={tag!.id_tag}
                         className="px-2 py-1 text-xs font-medium rounded-full"
                         style={{
-                          backgroundColor: tag!.color || "#e0f2f1",
-                          color: tag!.color ? "#fff" : "#000"
+                          backgroundColor: tag!.color_tag || "#e0f2f1",
+                          color: tag!.color_tag ? "#fff" : "#000"
                         }}
                       >
-                        {tag!.name}
+                        {tag!.name_tag}
                       </span>
                     ))}
                   </div>

@@ -1,15 +1,16 @@
-import { NextResponse } from 'next/server';
-import { updateProductStatus } from '@/lib/utils/dataJson';
+import { NextRequest, NextResponse } from 'next/server';
+import { ProductService } from '../../ProductService';
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
   try {
-    const { status } = await req.json()
+    const { status_product } = await req.json();
+    const { id } = await context.params;
 
-    await updateProductStatus(params.id, { status })
+    await ProductService.updateStatusProduct(parseInt(id), Number(status_product));
 
-    return NextResponse.json({ message: "Estado actualizado correctamente" })
+    return NextResponse.json({ message: "Estado actualizado correctamente" });
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Error al actualizar el estado" }, { status: 500 })
+    console.error(error);
+    return NextResponse.json({ error: "Error al actualizar el estado" }, { status: 500 });
   }
 }

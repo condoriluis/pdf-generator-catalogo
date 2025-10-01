@@ -2,7 +2,7 @@ import React from 'react';
 import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { styles } from './styles/pdfStyles';
 import { Watermark } from './watermark';
-import type { Product, Category, OrientationType, Watermark as WatermarkType } from '@/lib/constants';
+import type { Product, Category, Tag, Watermark as WatermarkType } from '@/lib/constants';
 import { getImageUrl } from './utils/getImageUrl';
 import { registerPdfFonts } from './utils/fonts';
 
@@ -12,14 +12,14 @@ type ServerCatalogDocumentListCompactProps = {
   catalog: {
     categories: Category[];
     products: Product[];
-    tags: { id: string; name: string; color?: string }[];
+    tags: Tag[];
   };
   title: string;
   subtitle?: string;
   description: string;
   logo_url?: string;
   category_bg: string;
-  orientation: OrientationType;
+  orientation: string;
   template: string;
   watermark?: WatermarkType;
   isPdf?: boolean;
@@ -35,16 +35,17 @@ export const ServerCatalogDocumentList: React.FC<ServerCatalogDocumentListCompac
   orientation,
   template,
   watermark,
-  isPdf
+  isPdf = false
 }) => {
+
   const activeProducts = catalog.products
-    .filter(p => p.status === 1)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .filter(p => p.status_product === 1)
+    .sort((a, b) => new Date(b.date_created_product).getTime() - new Date(a.date_created_product).getTime());
 
   const productsByCategory = catalog.categories
     .map(category => ({
       category,
-      products: activeProducts.filter(p => p.categoryId === category.id),
+      products: activeProducts.filter(p => p.id_category_product === category.id_category),
     }))
     .filter(c => c.products.length > 0);
 
@@ -53,16 +54,16 @@ export const ServerCatalogDocumentList: React.FC<ServerCatalogDocumentListCompac
       author='Luis CZ'
       title={`${title}, ${new Date().getFullYear()}`}
     >
-      <Page size="A4" orientation={orientation} style={styles.page}>
+      <Page size="A4" orientation={orientation as 'portrait' | 'landscape'} style={styles.page}>
 
         <Watermark watermark={watermark} />
 
         {/* Encabezado */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 0 }}>
           {logo_url && (
             <Image
               src={getImageUrl(logo_url, isPdf)}
-              style={{ width: 80, height: 50, objectFit: 'contain', marginRight: 0 }}
+              style={{ maxWidth: 140, maxHeight: 70, objectFit: 'contain', marginRight: 0 }}
             />
           )}
           <View style={{ flex: 1 }}>
@@ -72,22 +73,22 @@ export const ServerCatalogDocumentList: React.FC<ServerCatalogDocumentListCompac
         </View>
 
         {productsByCategory.map(({ category, products }) => (
-          <View key={category.id} style={styles.section}>
+          <View key={category.id_category} style={styles.section}>
 
             <Text style={{ ...styles.sectionTitle, backgroundColor: category_bg }}>
-              {category.name}
+              {category.name_category}
             </Text>
 
             {products.map((product, index) => {
-              const formattedPrice = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.price));
-              const formattedOffer = product.offerPrice && Number(product.offerPrice) > 0
-                ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.offerPrice))
+              const formattedPrice = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.price_product));
+              const formattedOffer = product.offerPrice_product && Number(product.offerPrice_product) > 0
+                ? new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(Number(product.offerPrice_product))
                 : null;
 
               const rowBg = '#ffffff';
 
               return (
-                <View key={product.id} style={{
+                <View key={product.id_product} style={{
                   flexDirection: 'row',
                   padding: 4,
                   marginBottom: 4,
@@ -98,38 +99,58 @@ export const ServerCatalogDocumentList: React.FC<ServerCatalogDocumentListCompac
                   alignItems: 'center',
                 }}>
 
-                  {product.image && (
+                  {product.image_product && (
                     <Image
-                      src={getImageUrl(product.image, isPdf)}
+                      src={getImageUrl(product.image_product, isPdf)}
                       style={{ width: 55, height: 55, objectFit: 'cover', borderRadius: 4, marginRight: 6 }}
                     />
                   )}
 
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11, fontWeight: 'bold' }}>{product.name}</Text>
+                    <Text style={{ fontSize: 11, fontWeight: 'bold' }}>{product.name_product}</Text>
                     <Text style={{ fontSize: 9, color: '#475569', marginBottom: 3 }}>
-                      {product.description.length > 100 ? product.description.slice(0, 100) + '...' : product.description}
+                      {product.description_product.length > 100 ? product.description_product.slice(0, 100) + '...' : product.description_product}
                     </Text>
 
-                    {product.tags && product.tags.length > 0 && (
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                        {product.tags.map(tagId => {
-                          const tag = catalog.tags.find(t => t.id === tagId);
-                          return tag ? (
-                            <Text key={tagId} style={{
-                              fontSize: 8,
-                              paddingVertical: 2,
-                              paddingHorizontal: 4,
-                              marginRight: 3,
-                              marginBottom: 3,
-                              borderRadius: 6,
-                              color: '#fff',
-                              backgroundColor: tag.color || '#0ea5e9'
-                            }}>{tag.name}</Text>
-                          ) : null;
-                        })}
-                      </View>
-                    )}
+                    {product.id_tag_product && (
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                      {(() => {
+                        let tagIds: string[] = [];
+
+                        if (typeof product.id_tag_product === 'string') {
+                          try {
+                            tagIds = JSON.parse(product.id_tag_product);
+                          } catch (e) {
+                            tagIds = [];
+                          }
+                        } else if (Array.isArray(product.id_tag_product)) {
+                          tagIds = product.id_tag_product;
+                        }
+
+                        return tagIds
+                          .map(tagId => catalog.tags.find(t => t.id_tag.toString() === tagId))
+                          .filter(Boolean)
+                          .map(tag => (
+                            <Text
+                              key={tag!.id_tag}
+                              style={{
+                                fontSize: 8,
+                                paddingVertical: 2,
+                                paddingHorizontal: 4,
+                                marginRight: 3,
+                                marginBottom: 3,
+                                borderRadius: 6,
+                                color: '#fff',
+                                backgroundColor: tag!.color_tag || '#0ea5e9',
+                              }}
+                            >
+                              {tag!.name_tag}
+                            </Text>
+                          ));
+                      })()}
+                    </View>
+                  )}
+
                   </View>
 
                   <View style={{ width: 80, alignItems: 'flex-end' }}>
@@ -148,10 +169,15 @@ export const ServerCatalogDocumentList: React.FC<ServerCatalogDocumentListCompac
                         </Text>
                     )}
 
-                    {product.isAvailable ? (
-                        <Text style={{ fontSize: 9, color: '#475569' }}>Stock: Disponible</Text>
+                    {product.isAvailable_product ? (
+                      <Text style={{ fontSize: 9, color: '#475569' }}>
+                        Stock:{' '}
+                        <Text style={{ fontSize: 9, color: '#16a34a' }}>
+                          Disponible
+                        </Text>
+                      </Text>
                     ) : (
-                        <Text style={{ fontSize: 9, color: '#475569' }}>Stock: {product.stock} unidades</Text>
+                        <Text style={{ fontSize: 9, color: '#475569' }}>Stock: {product.stock_product} unidades</Text>
                     )}
 
                    </View>

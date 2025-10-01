@@ -7,10 +7,10 @@ export function useCategoryDelete(
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>
 ) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const confirmDelete = (id: string) => {
-    setDeleteId(id);
+  const confirmDelete = (id_category: number) => {
+    setDeleteId(id_category);
     setDeleteDialogOpen(true);
   };
 
@@ -22,7 +22,7 @@ export function useCategoryDelete(
       if (!res.ok) throw new Error(data.error || 'Error desconocido');
       toast.success(data.message || 'Categoría eliminada correctamente');
 
-      setCategories(prev => prev.filter(c => c.id !== deleteId));
+      setCategories(prev => prev.filter(c => c.id_category !== deleteId));
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';

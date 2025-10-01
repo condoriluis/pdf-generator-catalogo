@@ -10,7 +10,6 @@ import {
   Button,
   Label,
   Input,
-  Textarea,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -68,32 +67,32 @@ function TagsManager() {
 
   // Definición de columnas
   const columns: ColumnDef<Tag>[] = [
-    { accessorKey: 'id', header: '#', cell: ({ row }) => row.index + 1 },
+    { accessorKey: 'id_tag', header: '#', cell: ({ row }) => row.index + 1 },
     { 
-      accessorKey: 'name', 
+      accessorKey: 'name_tag', 
       header: 'Nombre de la etiqueta',
       cell: ({ row }) => (
-        <Badge className="text-sm font-medium dark:text-gray-200" style={{ backgroundColor: row.getValue('color') }}>{row.getValue('name')}</Badge>
+        <Badge className="text-sm font-medium dark:text-gray-200" style={{ backgroundColor: row.getValue('color_tag') }}>{row.getValue('name_tag')}</Badge>
       ),
     },
     { 
-      accessorKey: 'color', 
+      accessorKey: 'color_tag', 
       header: 'Color',
       cell: ({ row }) => (
         <div className="flex items-center">
           <div 
             className="h-4 w-4 rounded-full mr-2" 
-            style={{ backgroundColor: row.getValue('color') }}
+            style={{ backgroundColor: row.getValue('color_tag') }}
           />
-          <span className="text-sm text-gray-500">{row.getValue('color')}</span>
+          <span className="text-sm text-gray-500">{row.getValue('color_tag')}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'createdAt',
+      accessorKey: 'date_created_tag',
       header: 'Fecha de Creación',
       cell: ({ row }) =>
-        new Date(row.getValue('createdAt')).toLocaleDateString(),
+        new Date(row.getValue('date_created_tag')).toLocaleDateString(),
     },
     {
       id: 'actions',
@@ -110,7 +109,7 @@ function TagsManager() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => confirmDelete(row.original.id)}
+            onClick={() => confirmDelete(row.original.id_tag)}
           >
             <Trash2 className="h-4 w-4 text-red-700" />
           </Button>
@@ -150,15 +149,15 @@ function TagsManager() {
               <Input
                 id="name"
                 type="text"
-                name="name"
-                value={formData.name}
+                name="name_tag"
+                value={formData.name_tag}
                 onChange={handleChange}
                 className={`w-full p-2 border rounded-lg ${
-                  errors.name ? 'border-red-500' : ''
+                  errors.name_tag ? 'border-red-500' : ''
                 }`}
               />
-              {errors.name && (
-                <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+              {errors.name_tag && (
+                <p className="text-red-500 text-sm mt-1">{errors.name_tag}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -166,20 +165,20 @@ function TagsManager() {
               <div className="flex items-center gap-3">
                 <Input
                   id="color"
-                  name="color"
+                  name="color_tag"
                   type="color"
-                  value={formData.color}
+                  value={formData.color_tag}
                   onChange={handleChange}
-                  className={`w-16 h-10 p-1 ${errors.color ? 'border-red-500' : ''}`}
+                  className={`w-16 h-10 p-1 ${errors.color_tag ? 'border-red-500' : ''}`}
                 />
                 <Input
-                  name="color"
-                  value={formData.color}
+                  name="color_tag"
+                  value={formData.color_tag}
                   onChange={handleChange}
-                  className={`flex-1 ${errors.color ? 'border-red-500' : ''}`}
+                  className={`flex-1 ${errors.color_tag ? 'border-red-500' : ''}`}
                 />
               </div>
-              {errors.color && <p className="text-red-500 text-sm mt-1">{errors.color}</p>}
+              {errors.color_tag && <p className="text-red-500 text-sm mt-1">{errors.color_tag}</p>}
             </div>
             <DialogFooter className="flex justify-end gap-2">
               <Button variant="outline" onClick={resetForm}>

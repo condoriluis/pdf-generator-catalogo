@@ -187,14 +187,14 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                     </td>
                   </tr>
                 ) : (
-                  displayedFiles.map((file) => (
-                  <tr key={file.id}>
+                  displayedFiles.map(file => (
+                  <tr key={file.id_file || file.id_temp}>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
                           <img
                             src={file.preview}
-                            alt={file.name}
+                            alt={file.name_file}
                             className="w-14 h-14 md:w-16 md:h-16 object-cover rounded-lg border border-gray-200 dark:border-neutral-700 shadow-sm"
                           />
                         </div>
@@ -205,28 +205,28 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                       <div className="flex flex-1 gap-1 min-w-0">
                         <Input
                           type="text"
-                          value={file.name}
-                          readOnly={file.selected && !file.link}
+                          value={file.name_file}
+                          readOnly={file.selected && !file.url_file}
                           onChange={(e) => {
                             const newName = e.target.value;
                             setFiles((prev) =>
-                              prev.map((f) => (f.id === file.id ? { ...f, name: newName } : f))
+                              prev.map((f) => (f.id_file === file.id_file ? { ...f, name_file: newName } : f))
                             );
                           }}
                           onBlur={async (e) => {
                             const newName = e.target.value.trim();
-                            if (file.link && newName && newName !== file.__originalName) {
+                            if (file.url_file && newName && newName !== file.__originalName) {
                               try {
                                 const res = await fetch('/api/archivos', {
                                   method: 'PATCH',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ id: file.id, name: newName }),
+                                  body: JSON.stringify({ id_file: file.id_file, name_file: newName }),
                                 });
 
                                 if (!res.ok) throw new Error('Error actualizando nombre');
 
                                 setFiles(prev =>
-                                  prev.map(f => f.id === file.id ? { ...f, __originalName: newName } : f)
+                                  prev.map(f => f.id_file === file.id_file ? { ...f, __originalName: newName } : f)
                                 );
 
                                 toast.success('Nombre actualizado correctamente');
@@ -243,16 +243,16 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                           variant="outline"
                           className="flex-shrink-0 px-2 py-1 text-gray-400 font-bold text-sm md:text-base"
                         >
-                          {file.extension}
+                          {file.extension_file}
                         </Button>
                       </div>
                     </td>
 
-                    <td className="px-4 py-2">{file.size}</td>
-                    <td className="px-4 py-2"><Badge>{file.folder}</Badge></td>
+                    <td className="px-4 py-2">{file.size_file_display}</td>
+                    <td className="px-4 py-2"><Badge>{file.name_folder_file}</Badge></td>
 
                     <td className="px-4 py-2">
-                      {file.selected && !file.link ? (
+                      {file.selected && file.__originalFile ? (
                         uploading ? (
                           <span className="text-blue-600 font-semibold animate-pulse flex items-center gap-1">
                             <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
@@ -275,21 +275,21 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                         ) : (
                           <span className="text-gray-500 italic font-medium">Listo para subir</span>
                         )
-                      ) : file.link ? (
+                      ) : file.url_file ? (
                         <a
-                          href={file.link}
+                          href={file.url_file}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-600 hover:underline truncate max-w-[200px] block"
-                          title={file.link}
+                          title={file.url_file}
                         >
-                          {file.link.length > 30 ? file.link.slice(0, 30) + "..." : file.link}
+                          {file.url_file.length > 30 ? file.url_file.slice(0, 30) + "..." : file.url_file}
                         </a>
                       ) : null}
                     </td>
 
                     <td className="px-4 py-2">
-                      {new Date(file.modified).toLocaleString('sv-SE', {
+                      {new Date(file.date_updated_file).toLocaleString('sv-SE', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
@@ -302,21 +302,21 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
 
                     <td className="px-2 py-4 flex">
 
-                      {file.selected && !file.link ? (
-                        <Button
-                          variant="default"
-                          onClick={() => {
-                            setSelectedFiles(prev =>
-                              prev.filter(f => f !== file.__originalFile)
-                            );
-                          }}
-                        >
-                          <span>X Clear</span>
-                        </Button>
-                      ) : onSelect ? (
+                    {file.selected && file.__originalFile ? (
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          setSelectedFiles(prev =>
+                            prev.filter(f => f.__originalFile !== file.__originalFile)
+                          );
+                        }}
+                      >
+                        <span>X Clear</span>
+                      </Button>
+                    ) : onSelect ? (
                         <Button
                           variant="outline"
-                          onClick={() => onSelect(file.link)}
+                          onClick={() => onSelect(file.url_file)}
                         >
                           Usar
                         </Button>
@@ -324,7 +324,7 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                         <>
                           <Button
                             size="icon"
-                            onClick={() => handleCopy(file.link)}
+                            onClick={() => handleCopy(file.url_file)}
                             className="mr-2 cursor-pointer"
                           >
                             <Copy className="w-4 h-4" />
@@ -340,7 +340,7 @@ export default function FilesPage({ onSelect }: FilesPageProps) {
                               <DialogHeader>
                                 <DialogTitle>¿Eliminar archivo?</DialogTitle>
                                 <DialogDescription>
-                                  Esta acción eliminará el archivo de {file.folder} y no se podrá recuperar.
+                                  Esta acción eliminará el archivo de {file.name_folder_file} y no se podrá recuperar.
                                 </DialogDescription>
                               </DialogHeader>
                               <DialogFooter>

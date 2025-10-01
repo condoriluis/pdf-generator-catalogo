@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTagById, updateTag, deleteTag } from '@/lib/utils/dataJson';
+import { TagService } from '../TagService';
 
 // GET /api/tags/[id] - Obtener un tag por ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: number } }
 ) {
   try {
-    const tag = await getTagById(params.id);
+    const tag = await TagService.getTagById(params.id);
     
     if (!tag) {
       return NextResponse.json({ error: 'Tag no encontrado' }, { status: 404 });
@@ -15,46 +15,43 @@ export async function GET(
     
     return NextResponse.json(tag);
   } catch (error) {
-    console.error(`Error al obtener tag ${params.id}:`, error);
     return NextResponse.json({ error: 'Error al obtener tag' }, { status: 500 });
   }
 }
 
 // PUT /api/tags/[id] - Actualizar un tag
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }
 ) {
+  
   try {
+
+    const { id } = await context.params;
+
     const body = await request.json();
-    const updatedTag = await updateTag(params.id, body);
+    const updatedTag = await TagService.updateTag(Number(id), body.name_tag, body.color_tag);
     
-    if (!updatedTag) {
-      return NextResponse.json({ error: 'Tag no encontrado' }, { status: 404 });
+    if (updatedTag) {
+      const getUpdatedTag = await TagService.getTagById(Number(id));
+      return NextResponse.json(getUpdatedTag, { status: 200 });
     }
     
-    return NextResponse.json(updatedTag);
   } catch (error) {
-    console.error(`Error al actualizar tag ${params.id}:`, error);
     return NextResponse.json({ error: 'Error al actualizar tag' }, { status: 500 });
   }
 }
 
 // DELETE /api/tags/[id] - Eliminar un tag
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export const DELETE = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
-    const success = await deleteTag(params.id);
-    
-    if (!success) {
-      return NextResponse.json({ error: 'Tag no encontrado' }, { status: 404 });
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de tag es necesario' }, { status: 400 });
     }
     
+    await TagService.deleteTag(parseInt(id));
     return NextResponse.json({ message: 'Tag eliminado correctamente' });
   } catch (error) {
-    console.error(`Error al eliminar tag ${params.id}:`, error);
     return NextResponse.json({ error: 'Error al eliminar tag' }, { status: 500 });
   }
 }

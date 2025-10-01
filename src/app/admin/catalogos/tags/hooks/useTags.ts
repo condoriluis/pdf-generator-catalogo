@@ -14,8 +14,8 @@ export function useTags() {
       const data = await res.json();
       const sorted = data.sort(
         (a: Tag, b: Tag) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+          new Date(b.date_created_tag).getTime() -
+          new Date(a.date_created_tag).getTime()
       );
       setTags(sorted);
     } catch (err) {

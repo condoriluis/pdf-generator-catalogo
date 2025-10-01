@@ -3,7 +3,7 @@ import { StyleSheet } from '@react-pdf/renderer';
 export const styles = StyleSheet.create({
   page: {
     padding: 24,
-    backgroundColor: '#f5f5f7', // Fondo muy suave
+    backgroundColor: '#f5f5f7',
     fontFamily: 'Ubuntu',
   },
   header: {
@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1e293b', // Azul oscuro elegante
+    color: '#1e293b',
     marginBottom: 4,
   },
   subtitle: {
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
-    border: '1px solid #e0e7ff', // Borde suave azul pastel
+    border: '1px solid #e0e7ff',
   },
   productHeader: {
     flexDirection: 'row',
@@ -80,7 +80,7 @@ export const styles = StyleSheet.create({
   productPrice: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#16a34a', // Verde llamativo para precio
+    color: '#16a34a',
   },
   productStock: {
     fontSize: 10,
