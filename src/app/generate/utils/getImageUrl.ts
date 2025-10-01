@@ -3,12 +3,22 @@ import { SITE_URL } from "@/lib/constants";
 export function getImageUrl(image: string, isPdf: boolean = false) {
   if (!image) return `${SITE_URL}/assets/images/image-default.jpg`;
 
-  if (image.startsWith("assets/images/products/")) {
-    return `${SITE_URL}/${image}`;
+  const isWebp = image.endsWith(".webp");
+
+  if (image.startsWith("assets/images/")) {
+    return isWebp
+      ? `${SITE_URL}/api/proxy?url=${encodeURIComponent(`${SITE_URL}/${image}`)}`
+      : `${SITE_URL}/${image}`;
   }
 
   if (isPdf) {
-    return `/api/proxy?url=${encodeURIComponent(image)}`;
+    return isWebp
+      ? `${SITE_URL}/api/proxy?url=${encodeURIComponent(image)}`
+      : image;
+  }
+
+  if (isWebp) {
+    return `${SITE_URL}/api/proxy?url=${encodeURIComponent(image)}`;
   }
 
   return image;
